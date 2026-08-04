@@ -1,0 +1,61 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Receita {
+  id              String   @id @default(uuid())
+  nome            String
+  categoria       String
+  valor           Float
+  moeda           String   @default("BRL")
+  cotacao         Float?
+  valorConvertido Float
+  observacao      String?
+  data            DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("receitas")
+}
+
+model Custo {
+  id              String   @id @default(uuid())
+  nome            String
+  categoria       String
+  valor           Float
+  moeda           String   @default("BRL")
+  cotacao         Float?
+  valorConvertido Float
+  observacao      String?
+  data            DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("custos")
+}
+
+model Historico {
+  id            String   @id @default(uuid())
+  tabela        String
+  registroId    String
+  campo         String
+  valorAnterior String?
+  novoValor     String?
+  usuario       String   @default("Usuário")
+  createdAt     DateTime @default(now())
+
+  @@map("historico")
+}
+
+model Configuracao {
+  id    String @id @default(uuid())
+  chave String @unique
+  valor String
+
+  @@map("configuracoes")
+}
