@@ -69,7 +69,13 @@ function d(dateStr: string) {
   return new Date(dateStr).toISOString();
 }
 
-const STORAGE_KEY = 'sementinhadomal_store_v2';
+function curDate(daysAgo = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+}
+
+const STORAGE_KEY = 'sementinhadomal_store_v3';
 const PROJETO1_ID = 'projeto-1';
 
 const INITIAL_PROJETOS: Projeto[] = [
@@ -78,35 +84,35 @@ const INITIAL_PROJETOS: Projeto[] = [
     nome: 'Projeto 1',
     descricao: 'Meu primeiro projeto de marketing digital',
     cor: '#6366f1',
-    createdAt: d('2024-08-01'),
+    createdAt: curDate(15),
   },
 ];
 
 const INITIAL_RECEITAS: Receita[] = [
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneBr', categoria: 'Vendas', valor: 23705.25, moeda: 'BRL', cotacao: null, valorConvertido: 23705.25, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Camiseta Europa', categoria: 'Vendas', valor: 742.15, moeda: 'BRL', cotacao: null, valorConvertido: 742.15, observacao: null, data: d('2024-08-02'), createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Vendidas', categoria: 'Perpétuo', valor: 3500.00, moeda: 'BRL', cotacao: null, valorConvertido: 3500.00, observacao: null, data: d('2024-08-03'), createdAt: d('2024-08-03'), updatedAt: d('2024-08-03') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneEU', categoria: 'Vendas', valor: 8192.66, moeda: 'BRL', cotacao: null, valorConvertido: 8192.66, observacao: null, data: d('2024-08-04'), createdAt: d('2024-08-04'), updatedAt: d('2024-08-04') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Rosa Oriental', categoria: 'Vendas', valor: 700.00, moeda: 'BRL', cotacao: null, valorConvertido: 700.00, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Fotos Editor', categoria: 'Serviço', valor: 500.00, moeda: 'BRL', cotacao: null, valorConvertido: 500.00, observacao: null, data: d('2024-08-06'), createdAt: d('2024-08-06'), updatedAt: d('2024-08-06') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Pipoca', categoria: 'Vendas', valor: 1998.00, moeda: 'BRL', cotacao: null, valorConvertido: 1998.00, observacao: null, data: d('2024-08-07'), createdAt: d('2024-08-07'), updatedAt: d('2024-08-07') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneBr', categoria: 'Vendas', valor: 23705.25, moeda: 'BRL', cotacao: null, valorConvertido: 23705.25, observacao: null, data: curDate(1), createdAt: curDate(1), updatedAt: curDate(1) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Camiseta Europa', categoria: 'Vendas', valor: 742.15, moeda: 'BRL', cotacao: null, valorConvertido: 742.15, observacao: null, data: curDate(2), createdAt: curDate(2), updatedAt: curDate(2) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Vendidas', categoria: 'Perpétuo', valor: 3500.00, moeda: 'BRL', cotacao: null, valorConvertido: 3500.00, observacao: null, data: curDate(3), createdAt: curDate(3), updatedAt: curDate(3) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneEU', categoria: 'Vendas', valor: 8192.66, moeda: 'BRL', cotacao: null, valorConvertido: 8192.66, observacao: null, data: curDate(4), createdAt: curDate(4), updatedAt: curDate(4) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Rosa Oriental', categoria: 'Vendas', valor: 700.00, moeda: 'BRL', cotacao: null, valorConvertido: 700.00, observacao: null, data: curDate(5), createdAt: curDate(5), updatedAt: curDate(5) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Fotos Editor', categoria: 'Serviço', valor: 500.00, moeda: 'BRL', cotacao: null, valorConvertido: 500.00, observacao: null, data: curDate(6), createdAt: curDate(6), updatedAt: curDate(6) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Pipoca', categoria: 'Vendas', valor: 1998.00, moeda: 'BRL', cotacao: null, valorConvertido: 1998.00, observacao: null, data: curDate(7), createdAt: curDate(7), updatedAt: curDate(7) },
 ];
 
 const INITIAL_CUSTOS: Custo[] = [
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Shopify', categoria: 'Ferramentas', valor: 5500.00, moeda: 'BRL', cotacao: null, valorConvertido: 5500.00, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Anúncios', categoria: 'Tráfego Pago', valor: 6616.54, moeda: 'USD', cotacao: 5.39, valorConvertido: 35664.14, observacao: 'US$ 6.616,54 × R$ 5,39', data: d('2024-08-02'), createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 538.46, moeda: 'BRL', cotacao: null, valorConvertido: 538.46, observacao: null, data: d('2024-08-03'), createdAt: d('2024-08-03'), updatedAt: d('2024-08-03') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Blablabla', categoria: 'Outros', valor: 50.00, moeda: 'BRL', cotacao: null, valorConvertido: 50.00, observacao: null, data: d('2024-08-04'), createdAt: d('2024-08-04'), updatedAt: d('2024-08-04') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 89.27, moeda: 'BRL', cotacao: null, valorConvertido: 89.27, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Mercado e Alimentação', categoria: 'Pessoal', valor: 850.00, moeda: 'BRL', cotacao: null, valorConvertido: 850.00, observacao: null, data: d('2024-08-06'), createdAt: d('2024-08-06'), updatedAt: d('2024-08-06') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'IOF', categoria: 'Taxas', valor: 1160.00, moeda: 'BRL', cotacao: null, valorConvertido: 1160.00, observacao: null, data: d('2024-08-07'), createdAt: d('2024-08-07'), updatedAt: d('2024-08-07') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Crédito Facebook', categoria: 'Crédito', valor: -500, moeda: 'USD', cotacao: 5.39, valorConvertido: -2695.00, observacao: 'Crédito — US$ 500 × R$ 5,39', data: d('2024-08-08'), createdAt: d('2024-08-08'), updatedAt: d('2024-08-08') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Shopify', categoria: 'Ferramentas', valor: 5500.00, moeda: 'BRL', cotacao: null, valorConvertido: 5500.00, observacao: null, data: curDate(1), createdAt: curDate(1), updatedAt: curDate(1) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Anúncios', categoria: 'Tráfego Pago', valor: 6616.54, moeda: 'USD', cotacao: 5.39, valorConvertido: 35664.14, observacao: 'US$ 6.616,54 × R$ 5,39', data: curDate(2), createdAt: curDate(2), updatedAt: curDate(2) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 538.46, moeda: 'BRL', cotacao: null, valorConvertido: 538.46, observacao: null, data: curDate(3), createdAt: curDate(3), updatedAt: curDate(3) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Blablabla', categoria: 'Outros', valor: 50.00, moeda: 'BRL', cotacao: null, valorConvertido: 50.00, observacao: null, data: curDate(4), createdAt: curDate(4), updatedAt: curDate(4) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 89.27, moeda: 'BRL', cotacao: null, valorConvertido: 89.27, observacao: null, data: curDate(5), createdAt: curDate(5), updatedAt: curDate(5) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Mercado e Alimentação', categoria: 'Pessoal', valor: 850.00, moeda: 'BRL', cotacao: null, valorConvertido: 850.00, observacao: null, data: curDate(6), createdAt: curDate(6), updatedAt: curDate(6) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'IOF', categoria: 'Taxas', valor: 1160.00, moeda: 'BRL', cotacao: null, valorConvertido: 1160.00, observacao: null, data: curDate(7), createdAt: curDate(7), updatedAt: curDate(7) },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Crédito Facebook', categoria: 'Crédito', valor: -500, moeda: 'USD', cotacao: 5.39, valorConvertido: -2695.00, observacao: 'Crédito — US$ 500 × R$ 5,39', data: curDate(8), createdAt: curDate(8), updatedAt: curDate(8) },
 ];
 
 const INITIAL_CREDENCIAIS: Credencial[] = [
-  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Shopify Admin', login: 'admin@lojaprojeto1.com', senha: 'ExemploSenha123!', url: 'https://myshopify.com', observacao: 'Conta principal da loja', createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
-  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Meta Business Manager', login: 'ads@projeto1.com', senha: 'MetaPassword2024#', url: 'https://business.facebook.com', observacao: 'BM Principal com Pixel ativo', createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
-  { id: uuid(), projetoId: PROJETO1_ID, servico: 'nouzzhub', login: 'caiquedossantospires17@gmail.com', senha: 'Password123!', url: '', observacao: '', createdAt: d('2024-08-16'), updatedAt: d('2024-08-16') },
+  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Shopify Admin', login: 'admin@lojaprojeto1.com', senha: 'ExemploSenha123!', url: 'https://myshopify.com', observacao: 'Conta principal da loja', createdAt: curDate(10), updatedAt: curDate(10) },
+  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Meta Business Manager', login: 'ads@projeto1.com', senha: 'MetaPassword2024#', url: 'https://business.facebook.com', observacao: 'BM Principal com Pixel ativo', createdAt: curDate(10), updatedAt: curDate(10) },
+  { id: uuid(), projetoId: PROJETO1_ID, servico: 'nouzzhub', login: 'caiquedossantospires17@gmail.com', senha: 'Password123!', url: '', observacao: '', createdAt: curDate(1), updatedAt: curDate(1) },
 ];
 
 type DataContextType = {
@@ -503,9 +509,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const allRec = pid === 'all' ? [...receitas] : receitas.filter((r) => r.projetoId === pid);
     const allCus = pid === 'all' ? [...custos] : custos.filter((c) => c.projetoId === pid);
 
+    const allTimes = [...allRec, ...allCus].map((x) => new Date(x.data).getTime()).filter((t) => !isNaN(t));
+    const refTime = allTimes.length > 0 ? Math.max(...allTimes, now.getTime()) : now.getTime();
+    const refDate = new Date(refTime);
+
     const monthlyBreakdown = [];
     for (let i = 5; i >= 0; i--) {
-      const dMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const dMonth = new Date(refDate.getFullYear(), refDate.getMonth() - i, 1);
       const label = monthNames[dMonth.getMonth()];
       const monthStart = new Date(dMonth.getFullYear(), dMonth.getMonth(), 1);
       const monthEnd = new Date(dMonth.getFullYear(), dMonth.getMonth() + 1, 0, 23, 59, 59);

@@ -22,7 +22,7 @@ const CORES_PRESET = [
 ];
 
 export function ProjectSwitcher() {
-  const { projetoAtivo, setProjetoAtivo, projetos, recarregarProjetos, projetoAtivoInfo } = useProject();
+  const { projetoAtivo, setProjetoAtivo, projetos, projetoAtivoInfo, addProjeto, updateProjeto, deleteProjeto } = useProject();
   const [open, setOpen] = useState(false);
   const [showNovo, setShowNovo] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -56,21 +56,15 @@ export function ProjectSwitcher() {
     if (!novoNome.trim()) return;
     setSalvando(true);
     try {
-      const res = await fetch('/api/projetos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: novoNome.trim(), descricao: novaDesc.trim(), cor: novaCor }),
-      });
-      if (res.ok) {
-        const novo = await res.json();
-        await recarregarProjetos();
-        setProjetoAtivo(novo.id);
-        setNovoNome('');
-        setNovaDesc('');
-        setNovaCor('#6366f1');
-        setShowNovo(false);
-        setOpen(false);
-      }
+      const novo = await addProjeto({ nome: novoNome.trim(), descricao: novaDesc.trim(), cor: novaCor });
+      setProjetoAtivo(novo.id);
+      setNovoNome('');
+      setNovaDesc('');
+      setNovaCor('#6366f1');
+      setShowNovo(false);
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSalvando(false);
     }
@@ -87,15 +81,10 @@ export function ProjectSwitcher() {
     if (!editNome.trim()) return;
     setSalvando(true);
     try {
-      const res = await fetch(`/api/projetos/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: editNome.trim(), descricao: editDesc.trim(), cor: editCor }),
-      });
-      if (res.ok) {
-        await recarregarProjetos();
-        setEditandoId(null);
-      }
+      await updateProjeto(id, { nome: editNome.trim(), descricao: editDesc.trim(), cor: editCor });
+      setEditandoId(null);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSalvando(false);
     }
@@ -103,13 +92,10 @@ export function ProjectSwitcher() {
 
   async function excluirProjeto(id: string, nome: string) {
     if (!confirm(`Excluir o projeto "${nome}" e todos os seus dados? Esta ação não pode ser desfeita.`)) return;
-    const res = await fetch(`/api/projetos/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      await recarregarProjetos();
-      if (projetoAtivo === id) setProjetoAtivo('all');
-    } else {
-      const err = await res.json();
-      alert(err.error || 'Erro ao excluir projeto');
+    try {
+      await deleteProjeto(id);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir projeto');
     }
   }
 
