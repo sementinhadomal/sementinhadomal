@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { store } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,29 +8,28 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const filterPeriod = searchParams.get('period') || 'all';
 
-    let dateWhere: any = {};
     const now = new Date();
+    let fromDate: Date | null = null;
 
     if (filterPeriod === 'today') {
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      dateWhere = { gte: startOfDay };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (filterPeriod === 'week') {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-      dateWhere = { gte: startOfWeek };
+      fromDate = new Date(now);
+      fromDate.setDate(now.getDate() - now.getDay());
+      fromDate.setHours(0, 0, 0, 0);
     } else if (filterPeriod === 'month') {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      dateWhere = { gte: startOfMonth };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
     } else if (filterPeriod === 'year') {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      dateWhere = { gte: startOfYear };
+      fromDate = new Date(now.getFullYear(), 0, 1);
     }
 
-    const where = Object.keys(dateWhere).length > 0 ? { data: dateWhere } : {};
+    let receitas = [...store.receitas];
+    let custos = [...store.custos];
 
-    const receitas = await prisma.receita.findMany({ where });
-    const custos = await prisma.custo.findMany({ where });
+    if (fromDate) {
+      receitas = receitas.filter((r) => new Date(r.data) >= fromDate!);
+      custos = custos.filter((c) => new Date(c.data) >= fromDate!);
+    }
 
     const totalFaturamento = receitas.reduce((acc, r) => acc + r.valorConvertido, 0);
     const totalCustos = custos.reduce((acc, c) => acc + c.valorConvertido, 0);
@@ -55,13 +54,30 @@ export async function GET(request: Request) {
     const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const monthlyDataMap: Record<string, { faturamento: number; custos: number; lucro: number }> = {};
 
-    // Dados atuais como ponto de partida
-    const currentMonthLabel = monthNames[now.getMonth()];
-    monthlyDataMap[currentMonthLabel] = {
-      faturamento: totalFaturamento,
-      custos: totalCustos,
-      lucro: lucroLiquido,
-    };
+    const allReceitas = [...store.receitas];
+    const allCustos = [...store.custos];
+
+    // Últimos 6 meses
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = monthNames[d.getMonth()];
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+
+      const monthReceitas = allReceitas.filter((r) => {
+        const rd = new Date(r.data);
+        return rd >= monthStart && rd <= monthEnd;
+      });
+      const monthCustos = allCustos.filter((c) => {
+        const cd = new Date(c.data);
+        return cd >= monthStart && cd <= monthEnd;
+      });
+
+      const fat = monthReceitas.reduce((a, r) => a + r.valorConvertido, 0);
+      const cst = monthCustos.reduce((a, c) => a + c.valorConvertido, 0);
+
+      monthlyDataMap[label] = { faturamento: fat, custos: cst, lucro: fat - cst };
+    }
 
     const monthlyBreakdown = Object.entries(monthlyDataMap).map(([mes, vals]) => ({
       mes,

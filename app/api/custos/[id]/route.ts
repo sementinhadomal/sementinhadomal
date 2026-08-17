@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { store, uuid, addHistorico } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,11 +12,12 @@ export async function PUT(
     const body = await request.json();
     const { nome, categoria, valor, moeda, cotacao, observacao, data } = body;
 
-    const existing = await prisma.custo.findUnique({ where: { id } });
-    if (!existing) {
+    const idx = store.custos.findIndex((c) => c.id === id);
+    if (idx === -1) {
       return NextResponse.json({ error: 'Custo não encontrado' }, { status: 404 });
     }
 
+    const existing = store.custos[idx];
     const numericValor = parseFloat(valor) || 0;
     const numericCotacao = cotacao ? parseFloat(cotacao) : null;
 
@@ -25,30 +26,28 @@ export async function PUT(
       valorConvertido = numericValor * numericCotacao;
     }
 
-    const updated = await prisma.custo.update({
-      where: { id },
-      data: {
-        nome,
-        categoria,
-        valor: numericValor,
-        moeda: moeda || 'BRL',
-        cotacao: numericCotacao,
-        valorConvertido,
-        observacao: observacao || null,
-        data: data ? new Date(data) : existing.data,
-      },
-    });
+    const updated = {
+      ...existing,
+      nome,
+      categoria,
+      valor: numericValor,
+      moeda: moeda || 'BRL',
+      cotacao: numericCotacao,
+      valorConvertido,
+      observacao: observacao || null,
+      data: data ? new Date(data).toISOString() : existing.data,
+      updatedAt: new Date().toISOString(),
+    };
 
-    await prisma.historico.create({
-      data: {
-        tabela: 'custos',
-        registroId: id,
-        campo: 'Edição',
-        valorAnterior: `Valor anterior: ${existing.nome} (R$ ${existing.valorConvertido.toFixed(2)})`,
-        novoValor: `Novo valor: ${updated.nome} (R$ ${updated.valorConvertido.toFixed(2)})`,
-        usuario: 'Usuário',
-      },
-    });
+    store.custos[idx] = updated;
+
+    addHistorico(
+      'custos',
+      id,
+      'Edição',
+      `Valor anterior: ${existing.nome} (R$ ${existing.valorConvertido.toFixed(2)})`,
+      `Novo valor: ${updated.nome} (R$ ${updated.valorConvertido.toFixed(2)})`
+    );
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -63,23 +62,21 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const existing = await prisma.custo.findUnique({ where: { id } });
-    if (!existing) {
+    const idx = store.custos.findIndex((c) => c.id === id);
+    if (idx === -1) {
       return NextResponse.json({ error: 'Custo não encontrado' }, { status: 404 });
     }
 
-    await prisma.custo.delete({ where: { id } });
+    const existing = store.custos[idx];
+    store.custos.splice(idx, 1);
 
-    await prisma.historico.create({
-      data: {
-        tabela: 'custos',
-        registroId: id,
-        campo: 'Exclusão',
-        valorAnterior: `${existing.nome} (R$ ${existing.valorConvertido.toFixed(2)})`,
-        novoValor: 'Excluído',
-        usuario: 'Usuário',
-      },
-    });
+    addHistorico(
+      'custos',
+      id,
+      'Exclusão',
+      `${existing.nome} (R$ ${existing.valorConvertido.toFixed(2)})`,
+      'Excluído'
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -94,34 +91,30 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const existing = await prisma.custo.findUnique({ where: { id } });
+    const existing = store.custos.find((c) => c.id === id);
     if (!existing) {
       return NextResponse.json({ error: 'Custo não encontrado' }, { status: 404 });
     }
 
-    const duplicated = await prisma.custo.create({
-      data: {
-        nome: `${existing.nome} (Cópia)`,
-        categoria: existing.categoria,
-        valor: existing.valor,
-        moeda: existing.moeda,
-        cotacao: existing.cotacao,
-        valorConvertido: existing.valorConvertido,
-        observacao: existing.observacao,
-        data: new Date(),
-      },
-    });
+    const now = new Date().toISOString();
+    const duplicated = {
+      ...existing,
+      id: uuid(),
+      nome: `${existing.nome} (Cópia)`,
+      data: now,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    await prisma.historico.create({
-      data: {
-        tabela: 'custos',
-        registroId: duplicated.id,
-        campo: 'Duplicação',
-        valorAnterior: `Original: ${existing.id}`,
-        novoValor: `Duplicado: ${duplicated.nome}`,
-        usuario: 'Usuário',
-      },
-    });
+    store.custos.push(duplicated);
+
+    addHistorico(
+      'custos',
+      duplicated.id,
+      'Duplicação',
+      `Original: ${existing.id}`,
+      `Duplicado: ${duplicated.nome}`
+    );
 
     return NextResponse.json(duplicated, { status: 201 });
   } catch (error) {

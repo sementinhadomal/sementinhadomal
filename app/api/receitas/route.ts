@@ -1,52 +1,48 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { store, uuid, addHistorico, type Receita } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = (searchParams.get('search') || '').toLowerCase();
     const categoria = searchParams.get('categoria') || '';
     const filterPeriod = searchParams.get('period') || 'all';
 
-    let dateWhere: any = {};
     const now = new Date();
+    let fromDate: Date | null = null;
+
     if (filterPeriod === 'today') {
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      dateWhere = { gte: startOfDay };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (filterPeriod === 'week') {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-      dateWhere = { gte: startOfWeek };
+      fromDate = new Date(now);
+      fromDate.setDate(now.getDate() - now.getDay());
+      fromDate.setHours(0, 0, 0, 0);
     } else if (filterPeriod === 'month') {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      dateWhere = { gte: startOfMonth };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
     } else if (filterPeriod === 'year') {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      dateWhere = { gte: startOfYear };
+      fromDate = new Date(now.getFullYear(), 0, 1);
     }
 
-    const where: any = {};
+    let receitas = [...store.receitas];
+
+    if (fromDate) {
+      receitas = receitas.filter((r) => new Date(r.data) >= fromDate!);
+    }
     if (search) {
-      where.OR = [
-        { nome: { contains: search } },
-        { observacao: { contains: search } },
-        { categoria: { contains: search } },
-      ];
+      receitas = receitas.filter(
+        (r) =>
+          r.nome.toLowerCase().includes(search) ||
+          r.categoria.toLowerCase().includes(search) ||
+          (r.observacao || '').toLowerCase().includes(search)
+      );
     }
     if (categoria) {
-      where.categoria = categoria;
-    }
-    if (Object.keys(dateWhere).length > 0) {
-      where.data = dateWhere;
+      receitas = receitas.filter((r) => r.categoria === categoria);
     }
 
-    const receitas = await prisma.receita.findMany({
-      where,
-      orderBy: { data: 'desc' },
-    });
+    receitas.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
     return NextResponse.json(receitas);
   } catch (error) {
@@ -68,30 +64,30 @@ export async function POST(request: Request) {
       valorConvertido = numericValor * numericCotacao;
     }
 
-    const newReceita = await prisma.receita.create({
-      data: {
-        nome,
-        categoria,
-        valor: numericValor,
-        moeda: moeda || 'BRL',
-        cotacao: numericCotacao,
-        valorConvertido,
-        observacao: observacao || null,
-        data: data ? new Date(data) : new Date(),
-      },
-    });
+    const now = new Date().toISOString();
+    const newReceita: Receita = {
+      id: uuid(),
+      nome,
+      categoria,
+      valor: numericValor,
+      moeda: moeda || 'BRL',
+      cotacao: numericCotacao,
+      valorConvertido,
+      observacao: observacao || null,
+      data: data ? new Date(data).toISOString() : now,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    // Registra histórico
-    await prisma.historico.create({
-      data: {
-        tabela: 'receitas',
-        registroId: newReceita.id,
-        campo: 'Criação',
-        valorAnterior: null,
-        novoValor: `Criado: ${newReceita.nome} - R$ ${newReceita.valorConvertido.toFixed(2)}`,
-        usuario: 'Usuário',
-      },
-    });
+    store.receitas.push(newReceita);
+
+    addHistorico(
+      'receitas',
+      newReceita.id,
+      'Criação',
+      null,
+      `Criado: ${newReceita.nome} - R$ ${newReceita.valorConvertido.toFixed(2)}`
+    );
 
     return NextResponse.json(newReceita, { status: 201 });
   } catch (error) {

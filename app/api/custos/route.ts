@@ -1,52 +1,48 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { store, uuid, addHistorico, type Custo } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = (searchParams.get('search') || '').toLowerCase();
     const categoria = searchParams.get('categoria') || '';
     const filterPeriod = searchParams.get('period') || 'all';
 
-    let dateWhere: any = {};
     const now = new Date();
+    let fromDate: Date | null = null;
+
     if (filterPeriod === 'today') {
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      dateWhere = { gte: startOfDay };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (filterPeriod === 'week') {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-      dateWhere = { gte: startOfWeek };
+      fromDate = new Date(now);
+      fromDate.setDate(now.getDate() - now.getDay());
+      fromDate.setHours(0, 0, 0, 0);
     } else if (filterPeriod === 'month') {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      dateWhere = { gte: startOfMonth };
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
     } else if (filterPeriod === 'year') {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      dateWhere = { gte: startOfYear };
+      fromDate = new Date(now.getFullYear(), 0, 1);
     }
 
-    const where: any = {};
+    let custos = [...store.custos];
+
+    if (fromDate) {
+      custos = custos.filter((c) => new Date(c.data) >= fromDate!);
+    }
     if (search) {
-      where.OR = [
-        { nome: { contains: search } },
-        { observacao: { contains: search } },
-        { categoria: { contains: search } },
-      ];
+      custos = custos.filter(
+        (c) =>
+          c.nome.toLowerCase().includes(search) ||
+          c.categoria.toLowerCase().includes(search) ||
+          (c.observacao || '').toLowerCase().includes(search)
+      );
     }
     if (categoria) {
-      where.categoria = categoria;
-    }
-    if (Object.keys(dateWhere).length > 0) {
-      where.data = dateWhere;
+      custos = custos.filter((c) => c.categoria === categoria);
     }
 
-    const custos = await prisma.custo.findMany({
-      where,
-      orderBy: { data: 'desc' },
-    });
+    custos.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
     return NextResponse.json(custos);
   } catch (error) {
@@ -68,29 +64,30 @@ export async function POST(request: Request) {
       valorConvertido = numericValor * numericCotacao;
     }
 
-    const newCusto = await prisma.custo.create({
-      data: {
-        nome,
-        categoria,
-        valor: numericValor,
-        moeda: moeda || 'BRL',
-        cotacao: numericCotacao,
-        valorConvertido,
-        observacao: observacao || null,
-        data: data ? new Date(data) : new Date(),
-      },
-    });
+    const now = new Date().toISOString();
+    const newCusto: Custo = {
+      id: uuid(),
+      nome,
+      categoria,
+      valor: numericValor,
+      moeda: moeda || 'BRL',
+      cotacao: numericCotacao,
+      valorConvertido,
+      observacao: observacao || null,
+      data: data ? new Date(data).toISOString() : now,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    await prisma.historico.create({
-      data: {
-        tabela: 'custos',
-        registroId: newCusto.id,
-        campo: 'Criação',
-        valorAnterior: null,
-        novoValor: `Criado: ${newCusto.nome} - R$ ${newCusto.valorConvertido.toFixed(2)}`,
-        usuario: 'Usuário',
-      },
-    });
+    store.custos.push(newCusto);
+
+    addHistorico(
+      'custos',
+      newCusto.id,
+      'Criação',
+      null,
+      `Criado: ${newCusto.nome} - R$ ${newCusto.valorConvertido.toFixed(2)}`
+    );
 
     return NextResponse.json(newCusto, { status: 201 });
   } catch (error) {
