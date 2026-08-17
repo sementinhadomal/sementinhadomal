@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, DollarSign, Calendar as CalendarIcon, FileText, Tag, RefreshCw } from 'lucide-react';
+import { X, RefreshCw, FolderOpen } from 'lucide-react';
+
+interface Projeto {
+  id: string;
+  nome: string;
+  cor: string;
+}
 
 interface ItemModalProps {
   isOpen: boolean;
@@ -9,6 +15,8 @@ interface ItemModalProps {
   onSave: (data: any) => Promise<void>;
   initialData?: any;
   type: 'receita' | 'custo';
+  projetos?: Projeto[];
+  projetoAtivoId?: string;
 }
 
 export function ItemModal({
@@ -17,6 +25,8 @@ export function ItemModal({
   onSave,
   initialData,
   type,
+  projetos = [],
+  projetoAtivoId,
 }: ItemModalProps) {
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -25,6 +35,7 @@ export function ItemModal({
   const [cotacao, setCotacao] = useState('5.39');
   const [observacao, setObservacao] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [projetoId, setProjetoId] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,26 +46,29 @@ export function ItemModal({
       setMoeda(initialData.moeda || 'BRL');
       setCotacao(initialData.cotacao ? String(initialData.cotacao) : '5.39');
       setObservacao(initialData.observacao || '');
+      setProjetoId(initialData.projetoId || projetoAtivoId || projetos[0]?.id || '');
       if (initialData.data) {
         setData(new Date(initialData.data).toISOString().split('T')[0]);
       }
     } else {
       setNome('');
-      setCategoria(type === 'receita' ? 'Oferta' : 'Infraestrutura');
+      setCategoria(type === 'receita' ? 'Lançamento' : 'Tráfego Pago');
       setValor('');
       setMoeda('BRL');
       setCotacao('5.39');
       setObservacao('');
       setData(new Date().toISOString().split('T')[0]);
+      setProjetoId(projetoAtivoId || projetos[0]?.id || '');
     }
-  }, [initialData, isOpen, type]);
+  }, [initialData, isOpen, type, projetoAtivoId, projetos]);
 
   if (!isOpen) return null;
 
-  // Conversão em tempo real
   const numValor = parseFloat(valor) || 0;
   const numCotacao = parseFloat(cotacao) || 0;
   const valorConvertido = moeda === 'USD' ? numValor * numCotacao : numValor;
+
+  const projetoSelecionado = projetos.find((p) => p.id === projetoId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +82,7 @@ export function ItemModal({
         cotacao: moeda === 'USD' ? numCotacao : null,
         observacao,
         data,
+        projetoId,
       });
       onClose();
     } catch (err) {
@@ -79,21 +94,49 @@ export function ItemModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
+        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-zinc-800">
           <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
             <span className={`w-2.5 h-2.5 rounded-full ${type === 'receita' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-            {initialData ? `Editar ${type === 'receita' ? 'Faturamento' : 'Custo'}` : `Novo ${type === 'receita' ? 'Faturamento' : 'Custo'}`}
+            {initialData
+              ? `Editar ${type === 'receita' ? 'Faturamento' : 'Custo'}`
+              : `Novo ${type === 'receita' ? 'Faturamento' : 'Custo'}`}
           </h3>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition-colors"
-          >
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* Projeto */}
+          {projetos.length > 1 && (
+            <div>
+              <label className="block text-xs font-semibold text-zinc-300 mb-1 flex items-center gap-1.5">
+                <FolderOpen className="w-3.5 h-3.5 text-zinc-400" />
+                Projeto
+              </label>
+              <select
+                value={projetoId}
+                onChange={(e) => setProjetoId(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+              >
+                {projetos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
+              {projetoSelecionado && (
+                <div className="mt-1 flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: projetoSelecionado.cor }} />
+                  <span className="text-[11px] text-zinc-500">{projetoSelecionado.nome}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Nome */}
           <div>
             <label className="block text-xs font-semibold text-zinc-300 mb-1">Nome</label>
             <input
@@ -101,7 +144,7 @@ export function ItemModal({
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              placeholder="Ex: Oferta 1 ou Contas Shopify"
+              placeholder={type === 'receita' ? 'Ex: Oferta 1, Mentoria VIP...' : 'Ex: Meta Ads, ClickFunnels...'}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
@@ -114,7 +157,7 @@ export function ItemModal({
                 required
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
-                placeholder="Ex: Marketing, Venda..."
+                placeholder="Ex: Lançamento, Tráfego..."
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
               />
             </div>
@@ -142,7 +185,6 @@ export function ItemModal({
                 <option value="USD">USD ($)</option>
               </select>
             </div>
-
             <div>
               <label className="block text-xs font-semibold text-zinc-300 mb-1">
                 {moeda === 'USD' ? 'Valor (USD)' : 'Valor (BRL)'}
@@ -157,7 +199,6 @@ export function ItemModal({
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
               />
             </div>
-
             {moeda === 'USD' && (
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1">Cotação</label>
@@ -174,7 +215,7 @@ export function ItemModal({
             )}
           </div>
 
-          {/* Automatic Conversion Preview */}
+          {/* Conversão em tempo real */}
           <div className="p-3 bg-zinc-950/80 rounded-lg border border-zinc-800 flex items-center justify-between">
             <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
               <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />

@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ProjectSwitcher } from './ProjectSwitcher';
+import { useProject } from '@/lib/project-context';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -25,6 +27,9 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { projetoAtivoInfo, projetoAtivo } = useProject();
+
+  const corAtiva = projetoAtivo === 'all' ? '#6366f1' : (projetoAtivoInfo?.cor || '#6366f1');
 
   return (
     <aside className="w-64 border-r border-zinc-800/80 bg-zinc-950/90 flex flex-col justify-between h-screen sticky top-0 z-40">
@@ -45,6 +50,9 @@ export function Sidebar() {
           </div>
         </div>
 
+        {/* Project Switcher */}
+        <ProjectSwitcher />
+
         {/* Menu Items */}
         <nav className="p-4 space-y-1.5">
           <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
@@ -63,6 +71,7 @@ export function Sidebar() {
                     ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 shadow-sm shadow-indigo-500/10'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80'
                 )}
+                style={isActive ? { borderColor: `${corAtiva}50`, color: corAtiva, backgroundColor: `${corAtiva}15` } : {}}
               >
                 <div className="flex items-center gap-3">
                   <Icon
@@ -70,10 +79,11 @@ export function Sidebar() {
                       'w-4 h-4 transition-colors',
                       isActive ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-300'
                     )}
+                    style={isActive ? { color: corAtiva } : {}}
                   />
                   <span>{item.name}</span>
                 </div>
-                {isActive && <ChevronRight className="w-4 h-4 text-indigo-400" />}
+                {isActive && <ChevronRight className="w-4 h-4" style={{ color: corAtiva }} />}
               </Link>
             );
           })}
