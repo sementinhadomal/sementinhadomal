@@ -82,25 +82,26 @@ const PROJETOS_INICIAIS: Projeto[] = [
 ];
 
 const RECEITAS_INICIAIS: Receita[] = [
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Oferta 1', categoria: 'Lançamento', valor: 12000, moeda: 'BRL', cotacao: null, valorConvertido: 12000, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Oferta 2', categoria: 'Lançamento', valor: 9800, moeda: 'BRL', cotacao: null, valorConvertido: 9800, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Vendidas', categoria: 'Perpétuo', valor: 450, moeda: 'BRL', cotacao: null, valorConvertido: 450, observacao: 'Sem taxas', data: d('2024-08-10'), createdAt: d('2024-08-10'), updatedAt: d('2024-08-10') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Mentoria VIP', categoria: 'Serviço', valor: 5000, moeda: 'BRL', cotacao: null, valorConvertido: 5000, observacao: null, data: d('2024-08-12'), createdAt: d('2024-08-12'), updatedAt: d('2024-08-12') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Afiliado Meta Ads', categoria: 'Afiliado', valor: 2100, moeda: 'USD', cotacao: 5.39, valorConvertido: 11319, observacao: 'Comissão de julho', data: d('2024-08-14'), createdAt: d('2024-08-14'), updatedAt: d('2024-08-14') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Assinaturas Recorrentes', categoria: 'Recorrente', valor: 3269.06, moeda: 'BRL', cotacao: null, valorConvertido: 3269.06, observacao: null, data: d('2024-08-20'), createdAt: d('2024-08-20'), updatedAt: d('2024-08-20') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneBr', categoria: 'Vendas', valor: 23705.25, moeda: 'BRL', cotacao: null, valorConvertido: 23705.25, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Camiseta Europa', categoria: 'Vendas', valor: 742.15, moeda: 'BRL', cotacao: null, valorConvertido: 742.15, observacao: null, data: d('2024-08-02'), createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Vendidas', categoria: 'Perpétuo', valor: 3500.00, moeda: 'BRL', cotacao: null, valorConvertido: 3500.00, observacao: null, data: d('2024-08-03'), createdAt: d('2024-08-03'), updatedAt: d('2024-08-03') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'DoneEU', categoria: 'Vendas', valor: 8192.66, moeda: 'BRL', cotacao: null, valorConvertido: 8192.66, observacao: null, data: d('2024-08-04'), createdAt: d('2024-08-04'), updatedAt: d('2024-08-04') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Rosa Oriental', categoria: 'Vendas', valor: 700.00, moeda: 'BRL', cotacao: null, valorConvertido: 700.00, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Fotos Editor', categoria: 'Serviço', valor: 500.00, moeda: 'BRL', cotacao: null, valorConvertido: 500.00, observacao: null, data: d('2024-08-06'), createdAt: d('2024-08-06'), updatedAt: d('2024-08-06') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Pipoca', categoria: 'Vendas', valor: 1998.00, moeda: 'BRL', cotacao: null, valorConvertido: 1998.00, observacao: null, data: d('2024-08-07'), createdAt: d('2024-08-07'), updatedAt: d('2024-08-07') },
 ];
 
 const CUSTOS_INICIAIS: Custo[] = [
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Meta Ads - Campanha Agosto', categoria: 'Tráfego Pago', valor: 8500, moeda: 'BRL', cotacao: null, valorConvertido: 8500, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Google Ads', categoria: 'Tráfego Pago', valor: 3200, moeda: 'BRL', cotacao: null, valorConvertido: 3200, observacao: null, data: d('2024-08-03'), createdAt: d('2024-08-03'), updatedAt: d('2024-08-03') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Copywriter Freelancer', categoria: 'Equipe', valor: 2500, moeda: 'BRL', cotacao: null, valorConvertido: 2500, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'ActiveCampaign', categoria: 'Ferramentas', valor: 180, moeda: 'USD', cotacao: 5.39, valorConvertido: 970.2, observacao: 'Plano Plus', data: d('2024-08-07'), createdAt: d('2024-08-07'), updatedAt: d('2024-08-07') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Hotmart Taxas', categoria: 'Taxas', valor: 1450, moeda: 'BRL', cotacao: null, valorConvertido: 1450, observacao: 'Taxa de 9.9%', data: d('2024-08-10'), createdAt: d('2024-08-10'), updatedAt: d('2024-08-10') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Designer Gráfico', categoria: 'Equipe', valor: 1800, moeda: 'BRL', cotacao: null, valorConvertido: 1800, observacao: null, data: d('2024-08-12'), createdAt: d('2024-08-12'), updatedAt: d('2024-08-12') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'ClickFunnels', categoria: 'Ferramentas', valor: 297, moeda: 'USD', cotacao: 5.39, valorConvertido: 1600.83, observacao: null, data: d('2024-08-15'), createdAt: d('2024-08-15'), updatedAt: d('2024-08-15') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Servidor VPS', categoria: 'Ferramentas', valor: 120, moeda: 'BRL', cotacao: null, valorConvertido: 120, observacao: null, data: d('2024-08-18'), createdAt: d('2024-08-18'), updatedAt: d('2024-08-18') },
-  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contador', categoria: 'Administrativo', valor: 800, moeda: 'BRL', cotacao: null, valorConvertido: 800, observacao: null, data: d('2024-08-20'), createdAt: d('2024-08-20'), updatedAt: d('2024-08-20') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Contas Shopify', categoria: 'Ferramentas', valor: 5500.00, moeda: 'BRL', cotacao: null, valorConvertido: 5500.00, observacao: null, data: d('2024-08-01'), createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Anúncios', categoria: 'Tráfego Pago', valor: 6616.54, moeda: 'USD', cotacao: 5.39, valorConvertido: 35664.14, observacao: 'US$ 6.616,54 × R$ 5,39', data: d('2024-08-02'), createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 538.46, moeda: 'BRL', cotacao: null, valorConvertido: 538.46, observacao: null, data: d('2024-08-03'), createdAt: d('2024-08-03'), updatedAt: d('2024-08-03') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Blablabla', categoria: 'Outros', valor: 50.00, moeda: 'BRL', cotacao: null, valorConvertido: 50.00, observacao: null, data: d('2024-08-04'), createdAt: d('2024-08-04'), updatedAt: d('2024-08-04') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Passagem', categoria: 'Viagem', valor: 89.27, moeda: 'BRL', cotacao: null, valorConvertido: 89.27, observacao: null, data: d('2024-08-05'), createdAt: d('2024-08-05'), updatedAt: d('2024-08-05') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Mercado e Alimentação', categoria: 'Pessoal', valor: 850.00, moeda: 'BRL', cotacao: null, valorConvertido: 850.00, observacao: null, data: d('2024-08-06'), createdAt: d('2024-08-06'), updatedAt: d('2024-08-06') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'IOF', categoria: 'Taxas', valor: 1160.00, moeda: 'BRL', cotacao: null, valorConvertido: 1160.00, observacao: null, data: d('2024-08-07'), createdAt: d('2024-08-07'), updatedAt: d('2024-08-07') },
+  { id: uuid(), projetoId: PROJETO1_ID, nome: 'Crédito Facebook', categoria: 'Crédito', valor: -500, moeda: 'USD', cotacao: 5.39, valorConvertido: -2695.00, observacao: 'Crédito — US$ 500 × R$ 5,39', data: d('2024-08-08'), createdAt: d('2024-08-08'), updatedAt: d('2024-08-08') },
 ];
+
 
 const CONFIGS_INICIAIS: Configuracao[] = [
   { id: uuid(), chave: 'cotacaoUSD', valor: '5.39' },
