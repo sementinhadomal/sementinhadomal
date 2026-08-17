@@ -46,25 +46,23 @@ export function MetricCard({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="glass-card glass-card-hover rounded-xl p-5 relative overflow-hidden"
+      className="glass-card glass-card-hover rounded-xl p-3.5 lg:p-5 relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+      <div className="flex items-center justify-between mb-2 lg:mb-3">
+        <span className="text-[10px] lg:text-xs font-semibold uppercase tracking-wider text-zinc-400 leading-tight pr-1">
           {title}
         </span>
-        <div className={cn('p-2 rounded-lg border', getBadgeColor())}>
-          <Icon className="w-4 h-4" />
+        <div className={cn('p-1.5 lg:p-2 rounded-lg border flex-shrink-0', getBadgeColor())}>
+          <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
         </div>
       </div>
 
-      <div className="flex items-baseline justify-between">
-        <h3 className={cn('text-2xl font-bold tracking-tight', getValueColor())}>
-          {value}
-        </h3>
-      </div>
+      <h3 className={cn('text-lg lg:text-2xl font-bold tracking-tight break-all', getValueColor())}>
+        {value}
+      </h3>
 
       {subtitle && (
-        <p className="mt-2 text-[11px] text-zinc-500 font-medium">{subtitle}</p>
+        <p className="mt-1.5 text-[10px] lg:text-[11px] text-zinc-500 font-medium">{subtitle}</p>
       )}
 
       {trend && (

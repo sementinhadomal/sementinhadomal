@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -12,6 +12,8 @@ import {
   Sprout,
   ChevronRight,
   Sparkles,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProjectSwitcher } from './ProjectSwitcher';
@@ -25,14 +27,13 @@ const navigation = [
   { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 
-export function Sidebar() {
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const { projetoAtivoInfo, projetoAtivo } = useProject();
-
   const corAtiva = projetoAtivo === 'all' ? '#6366f1' : (projetoAtivoInfo?.cor || '#6366f1');
 
   return (
-    <aside className="w-64 border-r border-zinc-800/80 bg-zinc-950/90 flex flex-col justify-between h-screen sticky top-0 z-40">
+    <div className="flex flex-col h-full">
       <div>
         {/* Brand Logo */}
         <div className="h-16 px-6 flex items-center gap-3 border-b border-zinc-800/60">
@@ -65,6 +66,7 @@ export function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onNavClick}
                 className={cn(
                   'flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all group',
                   isActive
@@ -75,10 +77,7 @@ export function Sidebar() {
               >
                 <div className="flex items-center gap-3">
                   <Icon
-                    className={cn(
-                      'w-4 h-4 transition-colors',
-                      isActive ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-300'
-                    )}
+                    className={cn('w-4 h-4 transition-colors', isActive ? 'text-indigo-400' : 'text-zinc-400 group-hover:text-zinc-300')}
                     style={isActive ? { color: corAtiva } : {}}
                   />
                   <span>{item.name}</span>
@@ -91,7 +90,7 @@ export function Sidebar() {
       </div>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-zinc-800/60 bg-zinc-950/40">
+      <div className="mt-auto p-4 border-t border-zinc-800/60 bg-zinc-950/40">
         <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-xs">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span>Status</span>
@@ -103,6 +102,66 @@ export function Sidebar() {
           <p className="text-[11px] text-zinc-400 truncate">USD/BRL Cotação: R$ 5,39</p>
         </div>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+export function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Fecha ao redimensionar para desktop
+  useEffect(() => {
+    const handle = () => { if (window.innerWidth >= 1024) setMobileOpen(false); };
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+
+  // Bloqueia scroll do body quando drawer está aberto
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  return (
+    <>
+      {/* ── Botão hamburguer (mobile) ── */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 w-9 h-9 flex items-center justify-center bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 hover:text-zinc-100 shadow-lg"
+        aria-label="Abrir menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* ── Sidebar Desktop ── */}
+      <aside className="hidden lg:flex w-64 border-r border-zinc-800/80 bg-zinc-950/90 flex-col justify-between h-screen sticky top-0 z-40">
+        <SidebarContent />
+      </aside>
+
+      {/* ── Overlay mobile ── */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* ── Drawer mobile ── */}
+      <aside
+        className={cn(
+          'lg:hidden fixed top-0 left-0 z-50 h-full w-72 bg-zinc-950 border-r border-zinc-800/80 flex flex-col transition-transform duration-300 ease-in-out',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-4 p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          aria-label="Fechar menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <SidebarContent onNavClick={() => setMobileOpen(false)} />
+      </aside>
+    </>
   );
 }

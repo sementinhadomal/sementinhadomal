@@ -63,9 +63,9 @@ export default function DashboardPage() {
         onPeriodChange={setPeriod}
       />
 
-      <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 lg:p-6 max-w-7xl w-full mx-auto space-y-4 lg:space-y-6">
         {/* Top Summary Banner */}
-        <div className="glass-card rounded-xl p-6 border border-zinc-800/80 bg-gradient-to-r from-zinc-900 via-indigo-950/20 to-zinc-900 flex items-center justify-between">
+        <div className="glass-card rounded-xl p-4 lg:p-6 border border-zinc-800/80 bg-gradient-to-r from-zinc-900 via-indigo-950/20 to-zinc-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {!isAll && (
               <div
@@ -74,7 +74,7 @@ export default function DashboardPage() {
               />
             )}
             <div>
-              <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+              <h1 className="text-base lg:text-xl font-bold text-zinc-100">
                 {isAll ? 'Visão Consolidada — Todos os Projetos' : `Visão: ${tituloProjeto}`}
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -94,7 +94,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 6 Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
           <MetricCard
             title="Faturamento Total"
             value={formatCurrency(cards.totalFaturamento)}
