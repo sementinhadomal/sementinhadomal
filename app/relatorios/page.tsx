@@ -1,38 +1,40 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { DashboardCharts } from '@/components/dashboard/Charts';
-import { Download, FileSpreadsheet, FileText, FileCode } from 'lucide-react';
+import { useData } from '@/lib/data-context';
+import { FileSpreadsheet, FileText, FileCode } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function RelatoriosPage() {
   const [period, setPeriod] = useState('all');
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [receitas, setReceitas] = useState<any[]>([]);
-  const [custos, setCustos] = useState<any[]>([]);
+  const { receitas, custos, projetoAtivo, getDashboardData } = useData();
 
-  useEffect(() => {
-    const load = async () => {
-      const [dashRes, recRes, cusRes] = await Promise.all([
-        fetch(`/api/dashboard?period=${period}`),
-        fetch(`/api/receitas?period=${period}`),
-        fetch(`/api/custos?period=${period}`),
-      ]);
-      setDashboardData(await dashRes.json());
-      setReceitas(await recRes.json());
-      setCustos(await cusRes.json());
-    };
-    load();
-  }, [period]);
+  const dashboardData = getDashboardData(period, projetoAtivo);
+
+  const now = new Date();
+  let fromDate: Date | null = null;
+  if (period === 'today') fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  else if (period === 'week') { fromDate = new Date(now); fromDate.setDate(now.getDate() - now.getDay()); fromDate.setHours(0,0,0,0); }
+  else if (period === 'month') fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (period === 'year') fromDate = new Date(now.getFullYear(), 0, 1);
+
+  let filteredRec = projetoAtivo === 'all' ? [...receitas] : receitas.filter((r) => r.projetoId === projetoAtivo);
+  let filteredCus = projetoAtivo === 'all' ? [...custos] : custos.filter((c) => c.projetoId === projetoAtivo);
+
+  if (fromDate) {
+    filteredRec = filteredRec.filter((r) => new Date(r.data) >= fromDate!);
+    filteredCus = filteredCus.filter((c) => new Date(c.data) >= fromDate!);
+  }
 
   // Export to Excel
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
 
-    const recData = receitas.map((r) => ({
+    const recData = filteredRec.map((r) => ({
       Nome: r.nome,
       Categoria: r.categoria,
       ValorOriginal: r.valor,
@@ -43,7 +45,7 @@ export default function RelatoriosPage() {
       Observacao: r.observacao || '',
     }));
 
-    const cusData = custos.map((c) => ({
+    const cusData = filteredCus.map((c) => ({
       Nome: c.nome,
       Categoria: c.categoria,
       ValorOriginal: c.valor,
@@ -66,8 +68,8 @@ export default function RelatoriosPage() {
   // Export to CSV
   const exportCSV = () => {
     const allData = [
-      ...receitas.map((r) => ({ Tipo: 'Faturamento', ...r })),
-      ...custos.map((c) => ({ Tipo: 'Custo', ...c })),
+      ...filteredRec.map((r) => ({ Tipo: 'Faturamento', ...r })),
+      ...filteredCus.map((c) => ({ Tipo: 'Custo', ...c })),
     ];
     const ws = XLSX.utils.json_to_sheet(allData);
     const csv = XLSX.utils.sheet_to_csv(ws);
@@ -93,7 +95,7 @@ export default function RelatoriosPage() {
     autoTable(doc, {
       startY: 42,
       head: [['Nome', 'Categoria', 'Moeda', 'Total (BRL)', 'Data']],
-      body: receitas.map((r) => [
+      body: filteredRec.map((r) => [
         r.nome,
         r.categoria,
         r.moeda,
@@ -108,7 +110,7 @@ export default function RelatoriosPage() {
     autoTable(doc, {
       startY: finalY + 4,
       head: [['Nome', 'Categoria', 'Moeda', 'Total (BRL)', 'Data']],
-      body: custos.map((c) => [
+      body: filteredCus.map((c) => [
         c.nome,
         c.categoria,
         c.moeda,
@@ -124,16 +126,16 @@ export default function RelatoriosPage() {
     <div className="flex-1 flex flex-col pb-12">
       <Header title="Relatórios & Exportação" selectedPeriod={period} onPeriodChange={setPeriod} />
 
-      <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 lg:p-6 max-w-7xl w-full mx-auto space-y-6">
         {/* Export Action Card */}
-        <div className="glass-card rounded-xl p-5 border border-zinc-800/80 flex items-center justify-between">
+        <div className="glass-card rounded-xl p-5 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-zinc-100">Exportar Dados Operacionais</h2>
             <p className="text-xs text-zinc-400 mt-0.5">
               Baixe seus relatórios financeiros completos nos formatos Excel, CSV ou PDF.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={exportExcel}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold transition-all"

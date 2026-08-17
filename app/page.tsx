@@ -21,26 +21,9 @@ import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-  const { projetoAtivo, projetoAtivoInfo, projetos } = useProject();
+  const { projetoAtivo, projetoAtivoInfo, projetos, getDashboardData } = useProject();
 
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/dashboard?period=${period}&projetoId=${projetoAtivo}`);
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      console.error('Error fetching dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [period, projetoAtivo]);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  const data = getDashboardData(period, projetoAtivo);
 
   const cards = data?.cards || {
     totalFaturamento: 0,
@@ -84,13 +67,10 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={fetchDashboardData}
-            className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </button>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-500/20">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Ao vivo
+          </div>
         </div>
 
         {/* 6 Metric Cards */}

@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { CredencialModal } from '@/components/modals/CredencialModal';
-import { useProject } from '@/lib/project-context';
+import { useData } from '@/lib/data-context';
 import {
   KeyRound,
   Plus,
-  Search,
   Copy,
   Check,
   Eye,
@@ -19,41 +18,37 @@ import {
   Lock,
   User,
   AlertTriangle,
-  FolderOpen,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function CredenciaisPage() {
-  const [data, setData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Estados locais de exibição de senha por ID
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
-  // Estados de feedback de cópia por campo ("login-id" ou "senha-id")
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const { projetoAtivo, projetos } = useProject();
+  const { credenciais, projetos, projetoAtivo, addCredencial, updateCredencial, deleteCredencial } = useData();
 
-  const fetchCredenciais = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/credenciais?search=${encodeURIComponent(search)}&projetoId=${projetoAtivo}`);
-      const json = await res.json();
-      setData(Array.isArray(json) ? json : []);
-    } catch (err) {
-      console.error('Error fetching credenciais:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, projetoAtivo]);
+  let filtered = projetoAtivo === 'all' ? [...credenciais] : credenciais.filter((c) => c.projetoId === projetoAtivo);
+  if (search.trim()) {
+    const q = search.toLowerCase().trim();
+    filtered = filtered.filter(
+      (c) =>
+        c.servico.toLowerCase().includes(q) ||
+        c.login.toLowerCase().includes(q) ||
+        (c.observacao || '').toLowerCase().includes(q) ||
+        (c.url || '').toLowerCase().includes(q)
+    );
+  }
 
-  useEffect(() => {
-    fetchCredenciais();
-  }, [fetchCredenciais]);
+  filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const dataWithProjects = filtered.map((c) => {
+    const p = projetos.find((proj) => proj.id === c.projetoId);
+    return { ...c, projetoNome: p?.nome || 'Sem projeto', projetoCor: p?.cor || '#6366f1' };
+  });
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -74,24 +69,14 @@ export default function CredenciaisPage() {
     };
 
     if (selectedItem) {
-      await fetch(`/api/credenciais/${selectedItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataWithProject),
-      });
+      await updateCredencial(selectedItem.id, dataWithProject);
     } else {
-      await fetch('/api/credenciais', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataWithProject),
-      });
+      await addCredencial(dataWithProject);
     }
-    fetchCredenciais();
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/credenciais/${id}`, { method: 'DELETE' });
-    fetchCredenciais();
+    await deleteCredencial(id);
   };
 
   return (
@@ -131,9 +116,7 @@ export default function CredenciaisPage() {
         </div>
 
         {/* Lista de Credenciais (Grid de Cards) */}
-        {loading ? (
-          <div className="py-12 text-center text-zinc-500 text-xs">Carregando acessos salvos...</div>
-        ) : data.length === 0 ? (
+        {dataWithProjects.length === 0 ? (
           <div className="glass-card rounded-xl p-8 border border-zinc-800/80 text-center space-y-3">
             <div className="w-12 h-12 rounded-full bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center mx-auto text-zinc-400">
               <KeyRound className="w-6 h-6" />
@@ -155,7 +138,7 @@ export default function CredenciaisPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.map((item) => {
+            {dataWithProjects.map((item) => {
               const isVisible = showPasswords[item.id] || false;
               const loginCopyKey = `login-${item.id}`;
               const passCopyKey = `pass-${item.id}`;

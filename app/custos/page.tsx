@@ -1,38 +1,43 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { DataTable } from '@/components/tables/DataTable';
 import { ItemModal } from '@/components/modals/ItemModal';
-import { useProject } from '@/lib/project-context';
+import { useData } from '@/lib/data-context';
 
 export default function CustosPage() {
-  const [data, setData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState('all');
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const { projetoAtivo, projetos } = useProject();
+  const { custos, projetos, projetoAtivo, addCusto, updateCusto, deleteCusto, duplicateCusto } = useData();
 
-  const fetchCustos = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `/api/custos?search=${encodeURIComponent(search)}&period=${period}&projetoId=${projetoAtivo}`
-      );
-      const json = await res.json();
-      setData(Array.isArray(json) ? json : []);
-    } catch (err) {
-      console.error('Error fetching custos:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, period, projetoAtivo]);
+  const now = new Date();
+  let fromDate: Date | null = null;
+  if (period === 'today') fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  else if (period === 'week') { fromDate = new Date(now); fromDate.setDate(now.getDate() - now.getDay()); fromDate.setHours(0,0,0,0); }
+  else if (period === 'month') fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (period === 'year') fromDate = new Date(now.getFullYear(), 0, 1);
 
-  useEffect(() => {
-    fetchCustos();
-  }, [fetchCustos]);
+  let filtered = projetoAtivo === 'all' ? [...custos] : custos.filter((c) => c.projetoId === projetoAtivo);
+  if (fromDate) filtered = filtered.filter((c) => new Date(c.data) >= fromDate!);
+  if (search.trim()) {
+    const q = search.toLowerCase().trim();
+    filtered = filtered.filter(
+      (c) =>
+        c.nome.toLowerCase().includes(q) ||
+        c.categoria.toLowerCase().includes(q) ||
+        (c.observacao || '').toLowerCase().includes(q)
+    );
+  }
+
+  filtered.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
+  const dataWithProjects = filtered.map((c) => {
+    const p = projetos.find((proj) => proj.id === c.projetoId);
+    return { ...c, projetoNome: p?.nome || 'Sem projeto', projetoCor: p?.cor || '#6366f1' };
+  });
 
   const handleSave = async (formData: any) => {
     const dataWithProject = {
@@ -41,32 +46,21 @@ export default function CustosPage() {
     };
 
     if (selectedItem) {
-      await fetch(`/api/custos/${selectedItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataWithProject),
-      });
+      await updateCusto(selectedItem.id, dataWithProject);
     } else {
-      await fetch('/api/custos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataWithProject),
-      });
+      await addCusto(dataWithProject);
     }
-    fetchCustos();
   };
 
   const handleDuplicate = async (id: string) => {
-    await fetch(`/api/custos/${id}`, { method: 'POST' });
-    fetchCustos();
+    await duplicateCusto(id);
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/custos/${id}`, { method: 'DELETE' });
-    fetchCustos();
+    await deleteCusto(id);
   };
 
-  const totalCustos = data.reduce((acc, c) => acc + c.valorConvertido, 0);
+  const totalCustos = dataWithProjects.reduce((acc, c) => acc + c.valorConvertido, 0);
 
   return (
     <div className="flex-1 flex flex-col pb-12">
@@ -78,7 +72,7 @@ export default function CustosPage() {
         onSearchChange={setSearch}
       />
 
-      <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 lg:p-6 max-w-7xl w-full mx-auto space-y-6">
         {/* Banner Total */}
         <div className="glass-card rounded-xl p-5 border border-zinc-800/80 flex items-center justify-between">
           <div>
@@ -89,7 +83,7 @@ export default function CustosPage() {
               R$ {totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </h2>
             <p className="text-[11px] text-zinc-500 mt-0.5">
-              {data.length} registro(s) encontrado(s)
+              {dataWithProjects.length} registro(s) encontrado(s)
             </p>
           </div>
           <button
@@ -101,7 +95,7 @@ export default function CustosPage() {
         </div>
 
         <DataTable
-          data={data}
+          data={dataWithProjects}
           type="custo"
           onAdd={() => { setSelectedItem(null); setModalOpen(true); }}
           onEdit={(item) => { setSelectedItem(item); setModalOpen(true); }}

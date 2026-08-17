@@ -1,58 +1,25 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
-import { Settings as SettingsIcon, Download, Upload, History, Save, CheckCircle } from 'lucide-react';
-import { formatDateTime } from '@/lib/utils';
+import { Settings as SettingsIcon, Download, Upload, Save, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useData } from '@/lib/data-context';
 
 export default function ConfiguracoesPage() {
   const [nomeSistema, setNomeSistema] = useState('Sementinha do Mal');
   const [moedaPadrao, setMoedaPadrao] = useState('BRL');
   const [cotacaoDolar, setCotacaoDolar] = useState('5.39');
   const [tema, setTema] = useState('dark');
-  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
 
-  const fetchConfigs = async () => {
-    try {
-      const res = await fetch('/api/configuracoes');
-      const data = await res.json();
-      if (data.nomeSistema) setNomeSistema(data.nomeSistema);
-      if (data.moedaPadrao) setMoedaPadrao(data.moedaPadrao);
-      if (data.cotacaoDolar) setCotacaoDolar(data.cotacaoDolar);
-      if (data.tema) setTema(data.tema);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch('/api/historico');
-      const data = await res.json();
-      setHistory(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchConfigs();
-    fetchHistory();
-  }, []);
+  const { exportBackupJSON, importBackupJSON, resetToDefaults } = useData();
 
   const handleSaveConfigs = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await fetch('/api/configuracoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          configs: { nomeSistema, moedaPadrao, cotacaoDolar, tema },
-        }),
-      });
       setSavedMessage('Configurações salvas com sucesso!');
       setTimeout(() => setSavedMessage(''), 3000);
     } catch (err) {
@@ -63,16 +30,10 @@ export default function ConfiguracoesPage() {
   };
 
   // Download Backup
-  const handleBackup = async () => {
+  const handleBackup = () => {
     try {
-      const res = await fetch('/api/configuracoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'backup' }),
-      });
-      const data = await res.json();
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const json = exportBackupJSON();
+      const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -89,20 +50,14 @@ export default function ConfiguracoesPage() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       try {
-        const backupData = JSON.parse(event.target?.result as string);
-        const res = await fetch('/api/configuracoes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'restore', backupData }),
-        });
-        const result = await res.json();
-        if (result.success) {
-          alert('Backup restaurado com sucesso! A página será atualizada.');
-          window.location.reload();
+        const jsonStr = event.target?.result as string;
+        const ok = importBackupJSON(jsonStr);
+        if (ok) {
+          alert('Backup restaurado com sucesso!');
         } else {
-          alert(result.error || 'Erro ao restaurar backup.');
+          alert('Erro ao restaurar backup. Verifique se o arquivo é um JSON válido.');
         }
       } catch (err) {
         console.error(err);
@@ -112,11 +67,17 @@ export default function ConfiguracoesPage() {
     reader.readAsText(file);
   };
 
+  const handleConfirmReset = () => {
+    resetToDefaults();
+    setShowResetModal(false);
+    alert('Dados restaurados para o padrão do Projeto 1.');
+  };
+
   return (
     <div className="flex-1 flex flex-col pb-12">
       <Header title="Configurações do Sistema" />
 
-      <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
+      <div className="p-4 lg:p-6 max-w-7xl w-full mx-auto space-y-6">
         {/* Settings Form */}
         <div className="glass-card rounded-xl p-6 border border-zinc-800/80">
           <h2 className="text-base font-bold text-zinc-100 mb-4 flex items-center gap-2">
@@ -125,7 +86,7 @@ export default function ConfiguracoesPage() {
           </h2>
 
           <form onSubmit={handleSaveConfigs} className="space-y-4 max-w-2xl">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1">
                   Nome do Sistema
@@ -153,7 +114,7 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1">
                   Cotação Padrão do Dólar (USD)
@@ -177,7 +138,6 @@ export default function ConfiguracoesPage() {
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
                 >
                   <option value="dark">Tema Dark Premium (Default)</option>
-                  <option value="light">Tema Light</option>
                 </select>
               </div>
             </div>
@@ -205,73 +165,65 @@ export default function ConfiguracoesPage() {
         <div className="glass-card rounded-xl p-6 border border-zinc-800/80">
           <h2 className="text-base font-bold text-zinc-100 mb-2">Backup & Restauração de Dados</h2>
           <p className="text-xs text-zinc-400 mb-4">
-            Faça um backup completo do seu banco de dados ou restaure um arquivo previamente salvo.
+            Faça um backup completo dos seus dados para salvar em arquivo JSON ou restaurar em outro dispositivo.
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <button
               onClick={handleBackup}
               className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-lg text-xs font-semibold border border-zinc-700 transition-colors"
             >
               <Download className="w-4 h-4 text-indigo-400" />
-              Fazer Backup Agora
+              Fazer Backup em Arquivo (.json)
             </button>
 
             <label className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-lg text-xs font-semibold border border-zinc-700 cursor-pointer transition-colors">
               <Upload className="w-4 h-4 text-emerald-400" />
-              Restaurar Backup
+              Restaurar Arquivo de Backup
               <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
             </label>
-          </div>
-        </div>
 
-        {/* Historico Completo */}
-        <div className="glass-card rounded-xl p-6 border border-zinc-800/80">
-          <h2 className="text-base font-bold text-zinc-100 mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-400" />
-            Histórico Completo de Alterações
-          </h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-950/80 text-zinc-400 border-b border-zinc-800 uppercase font-semibold text-[10px]">
-                <tr>
-                  <th className="py-2.5 px-3">Data / Hora</th>
-                  <th className="py-2.5 px-3">Tabela</th>
-                  <th className="py-2.5 px-3">Ação</th>
-                  <th className="py-2.5 px-3">Valor Anterior</th>
-                  <th className="py-2.5 px-3">Novo Valor</th>
-                  <th className="py-2.5 px-3">Usuário</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
-                {history.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-4 text-center text-zinc-500">
-                      Nenhuma alteração registrada ainda.
-                    </td>
-                  </tr>
-                ) : (
-                  history.map((h) => (
-                    <tr key={h.id} className="hover:bg-zinc-900/40">
-                      <td className="py-2.5 px-3 text-zinc-400">{formatDateTime(h.createdAt)}</td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-indigo-300">{h.tabela}</td>
-                      <td className="py-2.5 px-3 font-semibold">{h.campo}</td>
-                      <td className="py-2.5 px-3 text-zinc-400 max-w-xs truncate">
-                        {h.valorAnterior || '-'}
-                      </td>
-                      <td className="py-2.5 px-3 text-emerald-400 font-medium max-w-xs truncate">
-                        {h.novoValor || '-'}
-                      </td>
-                      <td className="py-2.5 px-3 text-zinc-400">{h.usuario}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 rounded-lg text-xs font-semibold border border-rose-800/50 transition-colors ml-auto"
+            >
+              <RefreshCw className="w-4 h-4 text-rose-400" />
+              Restaurar Dados Iniciais
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmação de reset */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 w-full max-w-sm shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-zinc-100">Restaurar Padrões?</h4>
+              <p className="text-xs text-zinc-400 mt-1">
+                Essa ação substituirá os dados salvos pelos valores padrões iniciais. Recomendamos fazer um backup antes.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmReset}
+                className="flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-500 transition-colors shadow-md shadow-rose-600/20"
+              >
+                Restaurar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
