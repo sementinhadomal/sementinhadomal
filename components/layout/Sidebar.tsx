@@ -14,6 +14,7 @@ import {
   Sparkles,
   Menu,
   X,
+  KeyRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProjectSwitcher } from './ProjectSwitcher';
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Faturamentos', href: '/faturamentos', icon: TrendingUp },
   { name: 'Custos', href: '/custos', icon: TrendingDown },
+  { name: 'Logins & Senhas', href: '/credenciais', icon: KeyRound },
   { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
   { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];

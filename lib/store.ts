@@ -41,6 +41,18 @@ export type Custo = {
   updatedAt: string;
 };
 
+export type Credencial = {
+  id: string;
+  projetoId: string;
+  servico: string;
+  login: string;
+  senha: string;
+  url?: string | null;
+  observacao?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Historico = {
   id: string;
   projetoId?: string;
@@ -102,6 +114,10 @@ const CUSTOS_INICIAIS: Custo[] = [
   { id: uuid(), projetoId: PROJETO1_ID, nome: 'Crédito Facebook', categoria: 'Crédito', valor: -500, moeda: 'USD', cotacao: 5.39, valorConvertido: -2695.00, observacao: 'Crédito — US$ 500 × R$ 5,39', data: d('2024-08-08'), createdAt: d('2024-08-08'), updatedAt: d('2024-08-08') },
 ];
 
+const CREDENCIAIS_INICIAIS: Credencial[] = [
+  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Shopify Admin', login: 'admin@lojaprojeto1.com', senha: 'ExemploSenha123!', url: 'https://myshopify.com', observacao: 'Conta principal da loja', createdAt: d('2024-08-01'), updatedAt: d('2024-08-01') },
+  { id: uuid(), projetoId: PROJETO1_ID, servico: 'Meta Business Manager', login: 'ads@projeto1.com', senha: 'MetaPassword2024#', url: 'https://business.facebook.com', observacao: 'BM Principal com Pixel ativo', createdAt: d('2024-08-02'), updatedAt: d('2024-08-02') },
+];
 
 const CONFIGS_INICIAIS: Configuracao[] = [
   { id: uuid(), chave: 'cotacaoUSD', valor: '5.39' },
@@ -117,6 +133,7 @@ declare global {
     projetos: Projeto[];
     receitas: Receita[];
     custos: Custo[];
+    credenciais: Credencial[];
     historico: Historico[];
     configuracoes: Configuracao[];
   } | undefined;
@@ -127,6 +144,7 @@ if (!global.__store) {
     projetos: [...PROJETOS_INICIAIS],
     receitas: [...RECEITAS_INICIAIS],
     custos: [...CUSTOS_INICIAIS],
+    credenciais: [...CREDENCIAIS_INICIAIS],
     historico: [],
     configuracoes: [...CONFIGS_INICIAIS],
   };
